@@ -38,6 +38,12 @@ d3.csv(csvLocation).then(function (data) {
       x.properties.EP_NOHSDP = +x.properties.EP_NOHSDP;
       x.properties.E_MINRTY = +x.properties.E_MINRTY;
       x.properties.mPop = (x.properties.E_MINRTY / x.properties.E_TOTPOP) * 100;
+      //houshold
+      x.properties.E_AGE65 = +x.properties.E_AGE65;
+      x.properties.E_AGE17 = +x.properties.E_AGE17;
+      x.properties.E_DISABL = +x.properties.E_AGE65;
+      x.properties.E_SNGPNT = +x.properties.E_SNGPNT;
+      x.properties.e_house_total = x.properties.E_AGE65 + x.properties.E_AGE17 + x.properties.E_DISABL + x.properties.E_SNGPNT;
     });
 
     console.log("geoJsonLocation jsonData: ", jsonData.features);
@@ -50,6 +56,33 @@ d3.csv(csvLocation).then(function (data) {
     var incomez = new L.LayerGroup();
     var hi_school = new L.LayerGroup();
     var per_mpop = new L.LayerGroup();
+    var house_comp = new L.LayerGroup();
+    
+    geojson_house_comp = L.choropleth(jsonData, {
+      valueProperty: "e_house_total",
+
+      scale: ["#D3D3D3", "#708090"],
+      
+      steps: 10,
+
+      mode: "q",
+      style: {
+        // Border color
+        color: "#fff",
+        weight: 1,
+        fillOpacity: 0.8,
+      },
+
+      onEachFeature: function (feature, layer) {
+        layer.bindPopup(
+          "Location:<br>" +
+            feature.properties.LOCATION +
+            "<br><br> Under 17, over 65, has disability, or single parent <br>" +
+            Math.round(feature.properties.e_house_total)
+        );
+      },
+      // }).addTo(myMap);
+    }).addTo(house_comp);
 
     geojson_below_pov = L.choropleth(jsonData, {
       valueProperty: "EP_POV",
@@ -244,6 +277,37 @@ d3.csv(csvLocation).then(function (data) {
     var income_legend = L.control({ position: "bottomright" });
     var hi_school_legend = L.control({ position: "bottomright" });
     var per_mpop_legend = L.control({ position: "bottomright" });
+    var house_comp_legend = L.control({ position: "bottomright" });
+
+    house_comp_legend.onAdd = function () {
+      var div = L.DomUtil.create("div", "info legend");
+      var limits = geojson_house_comp.options.limits;
+      var colors = geojson_house_comp.options.colors;
+      var labels = [];
+
+      // Add the minimum and maximum.
+      var legendInfo =
+        "<h1>Household composition</h1>" +
+        '<div class="labels">' +
+        '<div class="min">' +
+        limits[0] +
+        "</div>" +
+        '<div class="max">' +
+        Math.round(limits[limits.length - 1]) +
+        "</div>" +
+        "</div>";
+
+      div.innerHTML = legendInfo;
+
+      limits.forEach(function (limit, index) {
+        labels.push(
+          '<li style="background-color: ' + colors[index] + '"></li>'
+        );
+      });
+
+      div.innerHTML += "<ul>" + labels.join("") + "</ul>";
+      return div;
+    };
 
     pop_legend.onAdd = function () {
       var div = L.DomUtil.create("div", "info legend");
@@ -469,8 +533,6 @@ d3.csv(csvLocation).then(function (data) {
 
     // Create an overlay object to hold our overlay.
     var overlayMaps = {
-      // Earthquakes: earthquakes,
-      //"Earthquakes": layers.quakes,
       Population: populationz,
       "Population per sq mi": pop_per_sq_mile,
       "Pct Below Poverty": below_pov,
@@ -478,6 +540,7 @@ d3.csv(csvLocation).then(function (data) {
       Income: incomez,
       "Pct No High School Diploma": hi_school,
       "Percent of Minorities": per_mpop,
+      "Age > 65, Age < 17, Disability": house_comp
     };
 
     L.control
@@ -497,6 +560,7 @@ d3.csv(csvLocation).then(function (data) {
       Income: income_legend,
       "Pct No High School Diploma": hi_school_legend,
       "Percent of Minorities": per_mpop_legend,
+      "Age > 65, Age < 17, Disability": house_comp_legend
     };
     function legendAdd(event) {
       var layername = event.name;
