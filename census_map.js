@@ -11,7 +11,7 @@ var topo = L.tileLayer("https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png", {
     'Map data: &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, <a href="http://viewfinderpanoramas.org">SRTM</a> | Map style: &copy; <a href="https://opentopomap.org">OpenTopoMap</a> (<a href="https://creativecommons.org/licenses/by-sa/3.0/">CC-BY-SA</a>)',
 });
 
-var geoJsonLocation = "48.geojson";
+var geoJsonLocation = "harris.geojson";
 var csvLocation = "SVI2018_US_small.csv";
 
 d3.csv(csvLocation).then(function (data) {
@@ -43,7 +43,17 @@ d3.csv(csvLocation).then(function (data) {
       x.properties.E_AGE17 = +x.properties.E_AGE17;
       x.properties.E_DISABL = +x.properties.E_AGE65;
       x.properties.E_SNGPNT = +x.properties.E_SNGPNT;
-      x.properties.e_house_total = x.properties.E_AGE65 + x.properties.E_AGE17 + x.properties.E_DISABL + x.properties.E_SNGPNT;
+      x.properties.e_house_total =
+        x.properties.E_AGE65 +
+        x.properties.E_AGE17 +
+        x.properties.E_DISABL +
+        x.properties.E_SNGPNT;
+      // housing
+      x.properties.E_MUNIT = +x.properties.E_MUNIT;
+      x.properties.E_MOBILE = +x.properties.E_MOBILE;
+      x.properties.E_CROWD = +x.properties.E_CROWD;
+      x.properties.E_NOVEH = +x.properties.E_NOVEH;
+      x.properties.E_GROUPQ = +x.properties.E_GROUPQ;
     });
 
     console.log("geoJsonLocation jsonData: ", jsonData.features);
@@ -57,12 +67,147 @@ d3.csv(csvLocation).then(function (data) {
     var hi_school = new L.LayerGroup();
     var per_mpop = new L.LayerGroup();
     var house_comp = new L.LayerGroup();
-    
+    var per_ten_or_more = new L.LayerGroup();
+    var per_mob_est = new L.LayerGroup();
+    var per_peo_per_rms = new L.LayerGroup();
+    var per_no_veh = new L.LayerGroup();
+    var per_group_qtr = new L.LayerGroup();
+
+    geojson_ten_or_more = L.choropleth(jsonData, {
+      valueProperty: "E_MUNIT",
+
+      scale: ["#DDA0DD", "#C71585"],
+
+      steps: 10,
+
+      mode: "q",
+      style: {
+        // Border color
+        color: "#fff",
+        weight: 1,
+        fillOpacity: 0.8,
+      },
+
+      onEachFeature: function (feature, layer) {
+        layer.bindPopup(
+          "Location:<br>" +
+            feature.properties.LOCATION +
+            "<br><br>10 or More Units Estimate<br>" +
+            Math.round(feature.properties.E_MUNIT)
+        );
+      },
+      // }).addTo(myMap);
+    }).addTo(per_ten_or_more);
+
+    geojson_mob_est = L.choropleth(jsonData, {
+      valueProperty: "E_MOBILE",
+
+      scale: ["#9ACD32", "#808000"],
+
+      steps: 10,
+
+      mode: "q",
+      style: {
+        // Border color
+        color: "#fff",
+        weight: 1,
+        fillOpacity: 0.8,
+      },
+
+      onEachFeature: function (feature, layer) {
+        layer.bindPopup(
+          "Location:<br>" +
+            feature.properties.LOCATION +
+            "<br><br>Mobile Homes<br>" +
+            Math.round(feature.properties.E_MOBILE)
+        );
+      },
+      // }).addTo(myMap);
+    }).addTo(per_mob_est);
+
+    geojson_peo_per_rms = L.choropleth(jsonData, {
+      valueProperty: "E_CROWD",
+
+      scale: ["#FFC0CB", "#FA8072"],
+
+      steps: 10,
+
+      mode: "q",
+      style: {
+        // Border color
+        color: "#fff",
+        weight: 1,
+        fillOpacity: 0.8,
+      },
+
+      onEachFeature: function (feature, layer) {
+        layer.bindPopup(
+          "Location:<br>" +
+            feature.properties.LOCATION +
+            "<br><br>Occupied Housing Units<br>" +
+            Math.round(feature.properties.E_CROWD)
+        );
+      },
+      // }).addTo(myMap);
+    }).addTo(per_peo_per_rms);
+
+    geojson_no_veh = L.choropleth(jsonData, {
+      valueProperty: "E_NOVEH",
+
+      scale: ["#B0E0E6", "#20B2AA"],
+
+      steps: 10,
+
+      mode: "q",
+      style: {
+        // Border color
+        color: "#fff",
+        weight: 1,
+        fillOpacity: 0.8,
+      },
+
+      onEachFeature: function (feature, layer) {
+        layer.bindPopup(
+          "Location:<br>" +
+            feature.properties.LOCATION +
+            "<br><br>No Vehicle<br>" +
+            Math.round(feature.properties.E_NOVEH)
+        );
+      },
+      // }).addTo(myMap);
+    }).addTo(per_no_veh);
+
+    geojson_group_qtr = L.choropleth(jsonData, {
+      valueProperty: "E_GROUPQ",
+
+      scale: ["#FF7F50", "#FF4500"],
+
+      steps: 10,
+
+      mode: "q",
+      style: {
+        // Border color
+        color: "#fff",
+        weight: 1,
+        fillOpacity: 0.8,
+      },
+
+      onEachFeature: function (feature, layer) {
+        layer.bindPopup(
+          "Location:<br>" +
+            feature.properties.LOCATION +
+            "<br><br>Persons in Group Quarters<br>" +
+            Math.round(feature.properties.E_GROUPQ)
+        );
+      },
+      // }).addTo(myMap);
+    }).addTo(per_group_qtr);
+
     geojson_house_comp = L.choropleth(jsonData, {
       valueProperty: "e_house_total",
 
       scale: ["#D3D3D3", "#708090"],
-      
+
       steps: 10,
 
       mode: "q",
@@ -155,7 +300,7 @@ d3.csv(csvLocation).then(function (data) {
         layer.bindPopup(
           "Location:<br>" +
             feature.properties.LOCATION +
-            "<br><br>Percent of Income<br>" +
+            "<br><br>Per Capita Income<br>" +
             Math.round(feature.properties.EP_PCI)
         );
       },
@@ -278,6 +423,11 @@ d3.csv(csvLocation).then(function (data) {
     var hi_school_legend = L.control({ position: "bottomright" });
     var per_mpop_legend = L.control({ position: "bottomright" });
     var house_comp_legend = L.control({ position: "bottomright" });
+    var per_10_or_more_legend = L.control({ position: "bottomright" });
+    var per_mob_est_legend = L.control({ position: "bottomright" });
+    var per_peo_per_rms_legend = L.control({ position: "bottomright" });
+    var per_no_veh_legend = L.control({ position: "bottomright" });
+    var per_group_qtr_legend = L.control({ position: "bottomright" });
 
     house_comp_legend.onAdd = function () {
       var div = L.DomUtil.create("div", "info legend");
@@ -288,6 +438,96 @@ d3.csv(csvLocation).then(function (data) {
       // Add the minimum and maximum.
       var legendInfo =
         "<h1>Household composition</h1>" +
+        '<div class="labels">' +
+        '<div class="min">' +
+        limits[0] +
+        "</div>" +
+        '<div class="max">' +
+        Math.round(limits[limits.length - 1]) +
+        "</div>" +
+        "</div>";
+
+      div.innerHTML = legendInfo;
+
+      limits.forEach(function (limit, index) {
+        labels.push(
+          '<li style="background-color: ' + colors[index] + '"></li>'
+        );
+      });
+
+      div.innerHTML += "<ul>" + labels.join("") + "</ul>";
+      return div;
+    };
+
+    per_10_or_more_legend.onAdd = function () {
+      var div = L.DomUtil.create("div", "info legend");
+      var limits = geojson_ten_or_more.options.limits;
+      var colors = geojson_ten_or_more.options.colors;
+      var labels = [];
+
+      // Add the minimum and maximum.
+      var legendInfo =
+        "<h1>10 =< Housing Units</h1>" +
+        '<div class="labels">' +
+        '<div class="min">' +
+        limits[0] +
+        "</div>" +
+        '<div class="max">' +
+        Math.round(limits[limits.length - 1]) +
+        "</div>" +
+        "</div>";
+
+      div.innerHTML = legendInfo;
+
+      limits.forEach(function (limit, index) {
+        labels.push(
+          '<li style="background-color: ' + colors[index] + '"></li>'
+        );
+      });
+
+      div.innerHTML += "<ul>" + labels.join("") + "</ul>";
+      return div;
+    };
+
+    per_mob_est_legend.onAdd = function () {
+      var div = L.DomUtil.create("div", "info legend");
+      var limits = geojson_mob_est.options.limits;
+      var colors = geojson_mob_est.options.colors;
+      var labels = [];
+
+      // Add the minimum and maximum.
+      var legendInfo =
+        "<h1>10 =< Housing Units</h1>" +
+        '<div class="labels">' +
+        '<div class="min">' +
+        limits[0] +
+        "</div>" +
+        '<div class="max">' +
+        Math.round(limits[limits.length - 1]) +
+        "</div>" +
+        "</div>";
+
+      div.innerHTML = legendInfo;
+
+      limits.forEach(function (limit, index) {
+        labels.push(
+          '<li style="background-color: ' + colors[index] + '"></li>'
+        );
+      });
+
+      div.innerHTML += "<ul>" + labels.join("") + "</ul>";
+      return div;
+    };
+
+    per_peo_per_rms_legend.onAdd = function () {
+      var div = L.DomUtil.create("div", "info legend");
+      var limits = geojson_peo_per_rms.options.limits;
+      var colors = geojson_peo_per_rms.options.colors;
+      var labels = [];
+
+      // Add the minimum and maximum.
+      var legendInfo =
+        "<h1>10 =< Housing Units</h1>" +
         '<div class="labels">' +
         '<div class="min">' +
         limits[0] +
@@ -519,6 +759,66 @@ d3.csv(csvLocation).then(function (data) {
       return div;
     };
 
+    per_no_veh_legend.onAdd = function () {
+      var div = L.DomUtil.create("div", "info legend");
+      var limits = geojson_no_veh.options.limits;
+      var colors = geojson_no_veh.options.colors;
+      var labels = [];
+
+      // Add the minimum and maximum.
+      var legendInfo =
+        "<h1>Household without Vehicle</h1>" +
+        '<div class="labels">' +
+        '<div class="min">' +
+        limits[0] +
+        "</div>" +
+        '<div class="max">' +
+        Math.round(limits[limits.length - 1]) +
+        "</div>" +
+        "</div>";
+
+      div.innerHTML = legendInfo;
+
+      limits.forEach(function (limit, index) {
+        labels.push(
+          '<li style="background-color: ' + colors[index] + '"></li>'
+        );
+      });
+
+      div.innerHTML += "<ul>" + labels.join("") + "</ul>";
+      return div;
+    };
+
+    per_group_qtr_legend.onAdd = function () {
+      var div = L.DomUtil.create("div", "info legend");
+      var limits = geojson_group_qtr.options.limits;
+      var colors = geojson_group_qtr.options.colors;
+      var labels = [];
+
+      // Add the minimum and maximum.
+      var legendInfo =
+        "<h1>Persons in Group Quarters</h1>" +
+        '<div class="labels">' +
+        '<div class="min">' +
+        limits[0] +
+        "</div>" +
+        '<div class="max">' +
+        Math.round(limits[limits.length - 1]) +
+        "</div>" +
+        "</div>";
+
+      div.innerHTML = legendInfo;
+
+      limits.forEach(function (limit, index) {
+        labels.push(
+          '<li style="background-color: ' + colors[index] + '"></li>'
+        );
+      });
+
+      div.innerHTML += "<ul>" + labels.join("") + "</ul>";
+      return div;
+    };
+
     var myMap = L.map("map", {
       center: [29.7604, -95.3698],
       zoom: 12,
@@ -540,7 +840,12 @@ d3.csv(csvLocation).then(function (data) {
       Income: incomez,
       "Pct No High School Diploma": hi_school,
       "Percent of Minorities": per_mpop,
-      "Age > 65, Age < 17, Disability": house_comp
+      "Age > 65, Age < 17, Disability": house_comp,
+      "10 or more Housing Units": per_ten_or_more,
+      "Mobile Homes": per_mob_est,
+      "Occupied Housing Units": per_peo_per_rms,
+      "No Vehicles": per_no_veh,
+      "Group Quarters": per_group_qtr,
     };
 
     L.control
@@ -560,7 +865,12 @@ d3.csv(csvLocation).then(function (data) {
       Income: income_legend,
       "Pct No High School Diploma": hi_school_legend,
       "Percent of Minorities": per_mpop_legend,
-      "Age > 65, Age < 17, Disability": house_comp_legend
+      "Age > 65, Age < 17, Disability": house_comp_legend,
+      "10 or more Housing Units": per_10_or_more_legend,
+      "Mobile Homes": per_mob_est_legend,
+      "Occupied Housing Units": per_peo_per_rms_legend,
+      "No Vehicles": per_no_veh_legend,
+      "Group Quarters": per_group_qtr_legend,
     };
     function legendAdd(event) {
       var layername = event.name;
