@@ -707,7 +707,7 @@ d3.csv(csvLocation).then(function (data) {
 
       // Add the minimum and maximum.
       var legendInfo =
-        "<h1>Population</h1>" +
+        "<h1>Percent of Minorities</h1>" +
         '<div class="labels">' +
         '<div class="min">' +
         limits[0] +
